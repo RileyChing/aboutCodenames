@@ -1,0 +1,72 @@
+import numpy as np
+from sklearn import metrics
+from sklearn.datasets import fetch_20newsgroups
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import SGDClassifier
+from sklearn.svm import LinearSVC
+from sklearn.utils.extmath import density
+
+categories = [
+    'alt.atheism',
+    'talk.religion.misc',
+    'comp.graphics',
+    'sci.space'
+]
+
+print("Loading 20 newsgroups dataset for categories:")
+print(categories if categories else "all")
+
+dataHome = '/Users/apple/PycharmProjects/dataset'
+
+data_train = fetch_20newsgroups(data_home= dataHome, subset='train', categories=categories,
+                                shuffle=True, random_state=42)
+
+data_test = fetch_20newsgroups(data_home=dataHome, subset='test', categories=categories,
+                               shuffle=True, random_state=42)
+
+print('data loaded')
+
+y_train, y_test = data_train.target, data_test.target
+
+target_names = data_train.target_names
+
+vectorizer = TfidfVectorizer(sublinear_tf=True, max_df=0.5, stop_words='english')
+X_train = vectorizer.fit_transform(data_train.data)
+
+X_test = vectorizer.transform(data_test.data)
+feature_names = vectorizer.get_feature_names()
+
+# 在 as array 之前是什么呢
+feature_names = np.asarray(feature_names)
+
+results = []
+
+def benchmark(clf):
+    clf.fit(X_train, y_train)
+    pred = clf.predict(X_test)
+
+    if hasattr(clf, 'coef_'):
+        print("dimensionality: %d" % clf.coef_.shape[1])
+        print("density: %f" % density(clf.coef_))
+
+        # if opts.print_top10 and feature_names is not None:
+        print("top 10 keywords per class:")
+        for i, label in enumerate(target_names):
+            top10 = np.argsort(clf.coef_[i])[-10:]
+            print("%s: [%s]" % (label, " ".join(feature_names[top10])))
+        print()
+
+    print(metrics.classification_report(y_test, pred, target_names=target_names))
+
+
+for penalty in ["l2", "l1"]:
+    print('=' * 80)
+    print("%s penalty" % penalty.upper())
+    # Train Liblinear model
+    # svc stands for c-support vector classification
+    print('Linear SVC')
+    benchmark(LinearSVC(penalty=penalty, dual=False, tol=1e-3))
+
+    print('SGDClassifier')
+    # Train SGD model   n_iter=200,
+    benchmark(SGDClassifier(alpha=.0001, penalty=penalty))
