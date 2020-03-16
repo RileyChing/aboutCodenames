@@ -1,0 +1,158 @@
+import spacy
+nlp = spacy.load('en_core_web_lg')
+#from scipy import spatial
+from scipy.spatial.distance import cosine
+import numpy as np
+from sklearn.manifold import TSNE
+#import matplotlib.pyplot as plt
+import pylab as pl
+#%pylab inline
+from sklearn import svm
+import random
+
+# from random import randint
+# import numpy
+
+
+oldf = open('/Users/apple/PycharmProjects/helloworld/wordlistmini', 'r')
+newf = open('/Users/apple/PycharmProjects/helloworld/wordlistmini1', 'w')
+n = 0
+resultList = random.sample(range(0, 673), 4)  # sample(x,y)函数的作用是从序列x中，随机选择y个不重复的元素。
+print("resultList---", resultList)
+lines = oldf.readlines()
+matrix = []
+for i in resultList:
+    newf.write(lines[i])
+    matrix.append(lines[i])
+
+oldf.close()
+newf.close()
+print("..........")
+
+for i in range(4):
+    matrix[i] = matrix[i].strip('\n')
+
+print("matrix---", matrix)
+
+print("...................")
+print()
+
+"""
+dog = nlp.vocab["love"]
+cat = nlp.vocab["hate"]
+apple = nlp.vocab["apple"]
+orange = nlp.vocab["orange"]
+print(dog.vector)
+print(dog.similarity(cat))
+
+def vector_similarity(x, y):
+    return 1 - cosine(x, y)
+
+print(vector_similarity(dog.vector, cat.vector))
+"""
+embedding = np.array([])
+word_list = []
+#text = "apple banana pink dog"
+text = " ".join(matrix)
+doc = nlp(text)
+
+for token in doc:
+    if not(token.is_punct) and not(token.text in word_list):
+        word_list.append(token.text)
+
+print(doc[0].vector)
+
+for word in word_list:
+    embedding = np.append(embedding, nlp.vocab[word].vector)
+
+print(embedding.shape)
+embedding = embedding.reshape(len(word_list), -1)
+print(embedding.shape)
+print(embedding[0])
+
+def vector_similarity(x, y):
+    return 1 - cosine(x, y)
+
+print(vector_similarity(embedding[0],embedding[1]))
+
+tsne = TSNE(init='pca',random_state=1)#
+
+low_dim_embedding = tsne.fit_transform(embedding)
+
+x = low_dim_embedding#
+#np.r_[np.random.randn(2, 2) - [2, 2], np.random.randn(2, 2) + [2, 2]]
+y = [0] * 2 + [1] * 2  # 标签
+print(x)
+print(y)
+
+
+print(vector_similarity(x[0], x[1]))
+
+clf = svm.SVC(kernel='linear')  # linear rbf  poly
+clf.fit(x, y)  # 训练模型
+print(clf.support_)  # 支持向量对应的下表
+print()
+#print(clf.support_vectors_)  # 所有的支持向量
+
+w = clf.coef_[0]
+a = -w[0] / w[1]
+
+xx = np.linspace(-120, 120)  # 产生-5到5的线性连续值，间隔为1
+yy = a * xx - (clf.intercept_[0]) / w[1]
+# clf.intercept_[0]是w3.即为公式a1*x1+a2*x2+w3中的w3。
+# (clf.intercept_[0])/w[1]即为直线的截距
+#X = [(x[0] + x[1]) / 2]
+#Y = [0]
+#X = np.array(X)
+#print(X)
+# 得出支持向量的方程
+b = clf.support_vectors_[0]
+yy_down = a * xx + (b[1] - a * b[0])  # (b[1]-a*b[0])就是简单的算截距
+b = clf.support_vectors_[-1]
+yy_up = a * xx + (b[1] - a * b[0])
+
+print("w:", w)  # 打印出权重系数
+print("a:", a)  # 打印出斜率
+#print("suport_vectors_:", clf.support_vectors_)  # 打印出支持向量
+# print("clf.coef_:",clf.coef_) #打印出权重系数，还是w
+
+
+
+"""def plot_with_labels(low_dim_embs, labels, filename='tsne.pdf'):
+    assert low_dim_embs.shape[0] >= len(labels), "More labels than embeddings"
+    plt.figure(figsize=(18, 18))  # in inches
+    for i, label in enumerate(labels):
+        x, y = low_dim_embs[i, :]
+
+        plt.scatter(x, y)
+        plt.annotate(label,
+                 xy=(x, y),
+                 xytext=(5, 2),
+                 textcoords='offset points',
+                 ha='right',
+                 va='bottom')
+    plt.savefig(filename)
+plot_with_labels(low_dim_embedding, word_list)
+
+"""
+# 这个就是画出来
+pl.plot(xx, yy, 'k-')
+#pl.plot(xx, yy_down, 'k--')
+#pl.plot(xx, yy_up, 'k--')
+
+
+
+
+# 支持向量
+pl.scatter(clf.support_vectors_[:, 0], clf.support_vectors_[:, 1], s=100)
+# 全部的点
+pl.scatter(x[:, 0], x[:, 1], c=y, cmap=pl.cm.Paired, marker='o')
+
+#pl.scatter(X[:, 0], X[:, 1], c='y', cmap=pl.cm.Paired, marker='x')
+
+pl.savefig('LinearSVC.png')
+
+
+
+pl.axis('tight')
+pl.show()
