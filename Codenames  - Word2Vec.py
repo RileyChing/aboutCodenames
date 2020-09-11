@@ -3,13 +3,15 @@
 
 # We'll use the python library gensim: https://radimrehurek.com/gensim/
 
-
-
-
-
 import gensim
 
 from gensim import corpora
+import spacy
+nlp = spacy.load('en_core_web_lg')
+
+from scipy.spatial.distance import cosine
+import numpy as np
+import random
 
 # Load a premade word2vec model built on Google News articles.
 # 
@@ -32,8 +34,139 @@ print("Least common:",model.index2word[-50:])
 
 # Here's an example Codenames board.  `blue` is one team's words, `red` the other and `assassin` is the assassin word.
 
+f = open('./wordlistmini','r')
+
+transform = random.randint(1, 5)
+
+lines1 = f.readlines()
+matrix1 = []
+for i in range(0, len(lines1)):
+    matrix1.append(lines1[i])
+
+f.close()
+
+for i in range(0, len(matrix1)):
+    matrix1[i] = matrix1[i].strip('\n')
+
+text = " ".join(matrix1)
+doc = nlp(text)
+
+# embedding = []
+word_list = []
+
+for token in doc:
+    word_list.append(token.text)
+
+# for word in word_list:
+#     embedding.append(nlp.vocab[word].vector)
+#
+# embedding = np.array(embedding)
+
+def vector_similarity(x, y):
+    np.seterr(invalid='ignore')
+
+    return 1 - cosine(x, y)
 
 
+blue = []
+for i in range(0, 4):
+    blue.append(i)
+
+num = random.choice(range(0, len(word_list)))
+blue[0] = word_list[num]
+
+arr1 = []   #与a1含义相近
+arr2 = []   #与a1含义不相近
+
+
+for i in range(0, len(word_list)):
+    if num!=i:
+        sim = vector_similarity(nlp.vocab[blue[0]].vector, nlp.vocab[word_list[i]].vector)
+
+        if sim >= 0.45:
+            arr1.append(word_list[i])
+        else:
+            arr2.append(word_list[i])
+#--------------a2------------------------
+if transform == 1:
+    blue[1] = random.choice(arr2)
+else:
+    blue[1] = random.choice(arr1)
+
+arr3 = []   #与a1和a2含义都不相近
+arr3_1 = [] #与a1和a2含义都相近
+
+for i in range(0, len(arr2)):
+    sim = vector_similarity(nlp.vocab[blue[1]].vector, nlp.vocab[arr2[i]].vector)
+    if sim < 0.45:
+        arr3.append(arr2[i])
+    else:
+        arr3_1.append(arr2[i])
+
+arr3_1 = arr3_1 + arr1
+arr3_1.remove(blue[1])
+
+#--------------a3------------------------
+if transform == 1 or transform == 2:
+    blue[2] = random.choice(arr3)
+else:
+    blue[2] = random.choice(arr3_1)
+
+arr4 = []   #与a1和a2和a3含义都不相近
+arr4_1 = [] #与a1和a2和a3含义都相近
+
+for i in range(0, len(arr3)):
+    sim = vector_similarity(nlp.vocab[blue[2]].vector, nlp.vocab[arr3[i]].vector)
+    if sim < 0.45:
+        arr4.append(arr3[i])
+    else:
+        arr4_1.append(arr3[i])
+
+arr4_1 = arr4_1 + arr3_1
+arr4_1.remove(blue[2])
+
+#--------------a4------------------------
+if transform == 4 or transform == 5:
+    blue[3] = random.choice(arr4_1)
+else:
+    blue[3] = random.choice(arr4)
+
+arr5 = []   #与a1、a2、a3、a4含义都不相近
+arr5_1 = [] #与a1、a2、a3、a4含义都相近
+
+for i in range(0, len(arr4)):
+    sim = vector_similarity(nlp.vocab[blue[3]].vector, nlp.vocab[arr4[i]].vector)
+    if sim < 0.45:
+        arr5.append(arr4[i])
+    else:
+        arr5_1.append(arr4[i])
+
+arr5_1 = arr5_1 + arr4_1
+arr5_1.remove(blue[3])
+
+#--------------a5------------------------
+if transform == 5:
+    blue[4] = random.choice(arr5_1)
+else:
+    blue[4] = random.choice(arr5)
+
+arr_far = []    #与a1、a2、a3、a4、a5含义都不相近
+arr_near = []   #与a1、a2、a3、a4、a5含义都相近
+
+for i in range(0, len(arr5)):
+    sim = vector_similarity(nlp.vocab[blue[4]].vector, nlp.vocab[arr5[i]].vector)
+    if sim < 0.45:
+        arr_far.append(arr5[i])
+    else:
+        arr_near.append(arr5[i])
+
+arr_near = arr_near + arr5_1
+arr_near.remove(blue[4])
+
+print(blue)
+
+for i in range(0, 4):
+    blue.append()
 
 board = {
     'blue': ['ambulance', 'hospital', 'spell', 'lock', 'charge', 'tail', 'link', 'cook', 'web'],
@@ -65,27 +198,9 @@ print(dict)
 
 # As we can see, it produces a lot of nonsense words. We can use `restrict_vocab` to limit results to only the top n most common words in the corpus.
 
-# In[10]:
 
-'''
-model.most_similar(
-    positive=board['blue'],
-    restrict_vocab=50000,
-    topn=20
-)
 
-'''
-# This looks much better, and produces some decent clues.  
-# * "bed", "paramedics", "emergency" all relate to "ambulance" and "hospital." 
-# * "jail" could relate to "lock" and "charge." 
-# * "click" to "web" and "link."
-# 
-# But “bed” would also relate to the other team’s word “sleep”; and “click” with “button.” It would be bad to give clues which could point to the opponent’s cards. 
-# 
 # gensim allows for negative examples to be included as well to help avoid that.
-
-# In[11]:
-
 
 clue = model.most_similar(
     positive=board['blue'],
@@ -93,77 +208,10 @@ clue = model.most_similar(
     restrict_vocab=50000
 )
 
+for i in range(0, 4):
+    sum = 0
+    sim = vector_similarity(nlp.vocab[clue0].vector, nlp.vocab[blue[i]].vector)
+    if sim > 0.4:
+        num += 1
 
-# I really like the clue "telemedicine." It's non-obvious, but relates to four words: "web," "link," "ambulance" and "hospital." This shows the potential for this method to produce novel clues.
-# 
-# Let's say that the clue were "telemedicine" and the four words were removed from the board, then the next team got a turn.  What might their clues be?
-
-# In[12]:
-'''
-
-board = {
-    'blue': ['spell', 'lock', 'charge', 'tail', 'link'],
-    'red': ['cat', 'button', 'pipe', 'pants', 'mount', 'sleep', 'stick', 'file', 'worm'],
-    'assassin': 'doctor'
-}
-
-model.most_similar(
-    positive=board['red'],
-    negative=board['blue'],
-    restrict_vocab=50000
-)
-'''
-
-# This appears much less successful.  The top words mostly just seem to relate to a singe word:
-# * pillow -> sleep
-# * bra -> pants
-# * couch -> sleep? cat?
-
-# In[6]:
-
-'''
-game = {
-    'blue': ['Sitter', 'Aunt', 'Teenager', 'Protestant', 'Blacksmith'],
-    'red': ['Ear', 'Rim', 'Sentence', 'Money',],
-    'assassin': 'Doctor'
-}
-
-
-# In[7]:
-
-
-model.similar_by_word('Sitter', topn=10)
-
-
-# In[8]:
-
-
-model.most_similar(positive=game['blue'])
-
-
-# In[9]:
-
-
-model.most_similar(
-    positive=game['blue'],
-    restrict_vocab=50000,
-    topn=20
-)
-
-
-# In[10]:
-
-
-model.most_similar(
-    positive=game['blue'],
-    negative=game['red'],
-    restrict_vocab=50000
-)
-
-
-# In[ ]:
-
-
-
-
-'''
+print(clue0, sum)
