@@ -14,7 +14,7 @@ import numpy as np
 import random
 
 # Load a premade word2vec model built on Google News articles.
-# 
+#
 # Download from: https://drive.google.com/file/d/0B7XkCwpI5KDYNlNUTTlSS21pQmM
 
 
@@ -30,6 +30,7 @@ model = gensim.models.KeyedVectors.load_word2vec_format('GoogleNews-vectors-nega
 
 print("Most common:",model.index2word[:50])
 print("Least common:",model.index2word[-50:])
+
 
 
 # Here's an example Codenames board.  `blue` is one team's words, `red` the other and `assassin` is the assassin word.
@@ -168,50 +169,101 @@ print(blue)
 for i in range(0, 4):
     blue.append()
 
+red = []
 board = {
     'blue': ['ambulance', 'hospital', 'spell', 'lock', 'charge', 'tail', 'link', 'cook', 'web'],
     'red': ['cat', 'button', 'pipe', 'pants', 'mount', 'sleep', 'stick', 'file', 'worm'],
-    'assassin': 'doctor'
 }
 
 print(board['blue'][0])
 
-dict = corpora.Dictionary([board['blue']])
-print(dict)
-# We can use gensim to find the 10 words most related to "ambulance" in this word2vec model.
+point_b = 0
+point_r = 0
 
+while len(blue) != 0 and len(red) !=0 :
+    # -------------blue---------------
+    dict = corpora.Dictionary([board['blue']])
+    print(dict)
+    # We can use gensim to find the 10 words most related to the word in this word2vec model.
 
+    clue = model.most_similar(
+        positive=board['blue'],
+        negative=board['red'],
+        restrict_vocab=50000
+    )
 
+    for i in range(0, 4):
+        sum = 0
+        sim = vector_similarity(nlp.vocab[clue_b].vector, nlp.vocab[blue[i]].vector)
+        if sim > 0.4:
+            num += 1
 
-# print(model.similar_by_word('ambulance', topn=10))
+    print(clue_b, sum)
 
+    num = 0
 
-# Each line is the word, followed by how similar the word is to "ambulance." Some of these words word be useful, "parametics" for instance, but many are just other forms of the word "ambulance."
-# 
-# gensim allows us to directly find words the most similar to a whole group of words at one time.
+    while True:
+        print("words")
+        print("输入答案")
 
-# In[9]:
+        ans = input()
 
+        if ans in blue:
+            print("回答正确")
+            num += 1
+            point_b += 1
+            blue.remove(ans)
+            if num == sum + 1:
+                break
+        else:
+            print("回答错误")
+            blue.remove(ans)
+            break
+        # -------------red---------------
+        # dict = corpora.Dictionary([board['blue']])
+        # print(dict)
+        # We can use gensim to find the 10 words most related to the word in this word2vec model.
 
-# model.most_similar(positive=board['blue'])
+        clue = model.most_similar(
+            positive=board['red'],
+            negative=board['blue'],
+            restrict_vocab=50000
+        )
 
+        for i in range(0, 4):
+            sum = 0
+            sim = vector_similarity(nlp.vocab[clue_r].vector, nlp.vocab[blue[i]].vector)
+            if sim > 0.4:
+                num += 1
 
-# As we can see, it produces a lot of nonsense words. We can use `restrict_vocab` to limit results to only the top n most common words in the corpus.
+        print(clue_r, sum)
 
+        num = 0
 
+        while True:
+            print("words")
+            print("输入答案")
 
-# gensim allows for negative examples to be included as well to help avoid that.
+            ans = input()
 
-clue = model.most_similar(
-    positive=board['blue'],
-    negative=board['red'],
-    restrict_vocab=50000
-)
+            if ans in blue:
+                print("回答正确")
+                num += 1
+                point_b += 1
+                blue.remove(ans)
+                if num == sum + 1:
+                    break
+            else:
+                print("回答错误")
+                blue.remove(ans)
+                break
 
-for i in range(0, 4):
-    sum = 0
-    sim = vector_similarity(nlp.vocab[clue0].vector, nlp.vocab[blue[i]].vector)
-    if sim > 0.4:
-        num += 1
+if point_b > point_r :
+    print("蓝方获胜")
+    
+elif point_r > point_b :
+    print("红方获胜")
+    
+elif point_b == point_r :
+    print("平局")
 
-print(clue0, sum)
