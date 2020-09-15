@@ -38,7 +38,7 @@ model = gensim.models.KeyedVectors.load_word2vec_format('GoogleNews-vectors-nega
 f = open('./wordlistmini','r')
 
 # transform = random.randint(1,5)
-print("请输入棋盘难易度1-5")
+print("请输入棋盘难易度1-5:")
 transform = input()
 
 lines1 = f.readlines()
@@ -161,9 +161,11 @@ for i in range(0, len(arr5)):
 arr_near = arr_near + arr5_1
 arr_near.remove(a5)
 
-print(a1, a2, a3, a4, a5)
-# blue = [a1, a2, a3, a4, a5]
+# print(a1, a2, a3, a4, a5)
+blue = [a1, a2, a3, a4, a5]
 # print(blue)
+
+b1, b2, b3, b4 = random.sample(arr_far, 4)
 #----------------最简单的情况----------------------
 if transform == 1 :
     b1, b2, b3, b4 = random.sample(arr_far, 4)
@@ -178,9 +180,6 @@ if transform == 1 :
 if transform == 5 :
     b1, b2, b3, b4 = random.sample(arr_near, 4)
     # print('困难的情况:')
-    for i in b1, b2, b3, b4:
-        print(i, end=' ')
-    print("   ")
 
 #----------------中等难度的情况----------------------
 if transform == 2 :
@@ -189,13 +188,11 @@ if transform == 2 :
 
     b2, b3, b4 = random.sample(arr_far, 3)
 
-
 if transform == 3 :
     # print('中等难度情况2:')
     b1, b2 = random.sample(arr_near, 2)
 
     b3, b4 = random.sample(arr_far, 2)
-
 
 if transform == 4 :
     # print('中等难度情况3:')
@@ -206,109 +203,149 @@ if transform == 4 :
     #print("   ")
     # print(transform)
 
-
-# red = [b1, b2, b3, b4, b5]
+red = [b1, b2, b3, b4]
 # print(red)
+words = blue + red
+# print(words)
+random.shuffle(words)
+# print(words)
 
 board = {
     'blue': [a1, a2, a3, a4, a5],
     'red': [b1, b2, b3, b4],
 }
-
+# print(board)
+'''
 blue0 = []
 for k in board:
     blue0.append((board[k]))
 
 board_ran = random.shuffle(blue0)
 print(board_ran)
+'''
 # print(board['blue'][0])
 
 point_b = 0
 point_r = 0
 
 while len(board['blue']) != 0 and len(board['red']) !=0 :
+    print("---------游戏开始--------")
     # -------------blue---------------
-    dict = corpora.Dictionary([board['blue']])
-    print(dict)
+    # dict = corpora.Dictionary([board['blue']])
+    # print(dict)
     # We can use gensim to find the 10 words most related to the word in this word2vec model.
+    print("words:")
+    for i, j in enumerate(words):
+        print(j, end=" ")
+    print()
+    print("蓝队----提示：")
 
     clue = model.most_similar(
         positive=board['blue'],
         negative=board['red'],
         restrict_vocab=50000
     )
-
     # 设置clue 待优化
-    clue_b = clue[0]
+    clue_b = ' '
+    for i, j in clue:
+        clue_b = i
+        break
+
+    sum = 0
 
     for i in range(0, 4):
-        sum = 0
-        sim = vector_similarity(nlp.vocab[clue_b].vector, nlp.vocab[board['blue'[i]]].vector)
-        if sim > 0.4:
-            num += 1
+
+        sim = vector_similarity(nlp.vocab[clue_b].vector, nlp.vocab[blue[i]].vector)
+        if sim > 0.25:
+            sum += 1
 
     print(clue_b, sum)
 
     num = 0
 
     while True:
-        print("words")
-        print("输入答案")
+
+        print("蓝队输入答案")
 
         ans = input()
 
-        if ans in board['blue']:
+        if ans in blue:
             print("回答正确")
             num += 1
             point_b += 1
-            board['blue'].remove(ans)
+            words.remove(ans)
+            print("words:")
+            for i, j in enumerate(words):
+                print(j, end=" ")
+            print()
             if num == sum + 1:
                 break
-        else:
+        elif ans in red:
             print("回答错误")
-            board['blue'].remove(ans)
+            words.remove(ans)
             break
-        # -------------red---------------
-        # dict = corpora.Dictionary([board['blue']])
-        # print(dict)
-        # We can use gensim to find the 10 words most related to the word in this word2vec model.
 
-        clue = model.most_similar(
-            positive=board['red'],
-            negative=board['blue'],
-            restrict_vocab=50000
-        )
+        else:
+            print("请重试")
+            continue
+    # -------------red---------------
+    # dict = corpora.Dictionary([board['blue']])
+    # print(dict)
+    # We can use gensim to find the 10 words most related to the word in this word2vec model.
 
-        # 设置clue 待优化
-        clue_r = clue[0]
+    print("words:")
+    for i, j in enumerate(words):
+        print(j, end=" ")
+    print()
+    print("红队----提示：")
 
-        for i in range(0, 4):
-            sum = 0
-            sim = vector_similarity(nlp.vocab[clue_r].vector, nlp.vocab[board['red'[i]]].vector)
-            if sim > 0.4:
-                sum += 1
+    clue = model.most_similar(
+        positive=board['red'],
+        negative=board['blue'],
+        restrict_vocab=50000
+    )
 
-        print(clue_r, sum)
+    # 设置clue 待优化
+    clue_r = ' '
+    for i, j in clue:
+        clue_r = i
+        break
+    sum = 0
 
-        num = 0
+    for i in range(0, 4):
 
-        while True:
-            print(board_ran)
-            print("输入答案")
+        sim = vector_similarity(nlp.vocab[clue_r].vector, nlp.vocab[red[i]].vector)
+        if sim > 0.4:
+            sum += 1
 
-            ans = input()
+    print(clue_r, sum)
 
-            if ans in board['red']:
-                print("回答正确")
-                num += 1
-                point_b += 1
-                board['red'].remove(ans)
-                if num == sum + 1:
-                    break
-            else:
-                print("回答错误")
-                board['red'].remove(ans)
+    num = 0
+
+    while True:
+        
+        print("红队输入答案")
+
+        ans = input()
+
+        if ans in red:
+            print("回答正确")
+            num += 1
+            point_b += 1
+            words.remove(ans)
+            print("words:")
+            for i, j in enumerate(words):
+                print(j, end=" ")
+            print()
+            if num == sum + 1:
                 break
+        elif ans in blue:
+            print("回答错误")
+            words.remove(ans)
+            break
+        else:
+            print("请重试")
+            continue
 
 if point_b > point_r :
     print("蓝方获胜")
