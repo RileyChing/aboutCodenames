@@ -28,8 +28,8 @@ model = gensim.models.KeyedVectors.load_word2vec_format('GoogleNews-vectors-nega
 
 
 
-print("Most common:",model.index2word[:50])
-print("Least common:",model.index2word[-50:])
+# print("Most common:",model.index2word[:50])
+# print("Least common:",model.index2word[-50:])
 
 
 
@@ -37,7 +37,9 @@ print("Least common:",model.index2word[-50:])
 
 f = open('./wordlistmini','r')
 
-transform = random.randint(1, 5)
+# transform = random.randint(1,5)
+print("请输入棋盘难易度1-5")
+transform = input()
 
 lines1 = f.readlines()
 matrix1 = []
@@ -68,13 +70,8 @@ def vector_similarity(x, y):
 
     return 1 - cosine(x, y)
 
-
-blue = []
-for i in range(0, 4):
-    blue.append(i)
-
 num = random.choice(range(0, len(word_list)))
-blue[0] = word_list[num]
+a1 = word_list[num]
 
 arr1 = []   #与a1含义相近
 arr2 = []   #与a1含义不相近
@@ -82,7 +79,7 @@ arr2 = []   #与a1含义不相近
 
 for i in range(0, len(word_list)):
     if num!=i:
-        sim = vector_similarity(nlp.vocab[blue[0]].vector, nlp.vocab[word_list[i]].vector)
+        sim = vector_similarity(nlp.vocab[a1].vector, nlp.vocab[word_list[i]].vector)
 
         if sim >= 0.45:
             arr1.append(word_list[i])
@@ -90,97 +87,146 @@ for i in range(0, len(word_list)):
             arr2.append(word_list[i])
 #--------------a2------------------------
 if transform == 1:
-    blue[1] = random.choice(arr2)
+    a2 = random.choice(arr2)
 else:
-    blue[1] = random.choice(arr1)
+    a2 = random.choice(arr1)
 
 arr3 = []   #与a1和a2含义都不相近
 arr3_1 = [] #与a1和a2含义都相近
 
 for i in range(0, len(arr2)):
-    sim = vector_similarity(nlp.vocab[blue[1]].vector, nlp.vocab[arr2[i]].vector)
+    sim = vector_similarity(nlp.vocab[a2].vector, nlp.vocab[arr2[i]].vector)
     if sim < 0.45:
         arr3.append(arr2[i])
     else:
         arr3_1.append(arr2[i])
 
 arr3_1 = arr3_1 + arr1
-arr3_1.remove(blue[1])
+arr3_1.remove(a2)
 
 #--------------a3------------------------
 if transform == 1 or transform == 2:
-    blue[2] = random.choice(arr3)
+    a3 = random.choice(arr3)
 else:
-    blue[2] = random.choice(arr3_1)
+    a3 = random.choice(arr3_1)
 
 arr4 = []   #与a1和a2和a3含义都不相近
 arr4_1 = [] #与a1和a2和a3含义都相近
 
 for i in range(0, len(arr3)):
-    sim = vector_similarity(nlp.vocab[blue[2]].vector, nlp.vocab[arr3[i]].vector)
+    sim = vector_similarity(nlp.vocab[a3].vector, nlp.vocab[arr3[i]].vector)
     if sim < 0.45:
         arr4.append(arr3[i])
     else:
         arr4_1.append(arr3[i])
 
 arr4_1 = arr4_1 + arr3_1
-arr4_1.remove(blue[2])
+arr4_1.remove(a3)
 
 #--------------a4------------------------
 if transform == 4 or transform == 5:
-    blue[3] = random.choice(arr4_1)
+    a4 = random.choice(arr4_1)
 else:
-    blue[3] = random.choice(arr4)
+    a4 = random.choice(arr4)
 
 arr5 = []   #与a1、a2、a3、a4含义都不相近
 arr5_1 = [] #与a1、a2、a3、a4含义都相近
 
 for i in range(0, len(arr4)):
-    sim = vector_similarity(nlp.vocab[blue[3]].vector, nlp.vocab[arr4[i]].vector)
+    sim = vector_similarity(nlp.vocab[a4].vector, nlp.vocab[arr4[i]].vector)
     if sim < 0.45:
         arr5.append(arr4[i])
     else:
         arr5_1.append(arr4[i])
 
 arr5_1 = arr5_1 + arr4_1
-arr5_1.remove(blue[3])
+arr5_1.remove(a4)
 
 #--------------a5------------------------
 if transform == 5:
-    blue[4] = random.choice(arr5_1)
+    a5 = random.choice(arr5_1)
 else:
-    blue[4] = random.choice(arr5)
+    a5 = random.choice(arr5)
 
 arr_far = []    #与a1、a2、a3、a4、a5含义都不相近
 arr_near = []   #与a1、a2、a3、a4、a5含义都相近
 
 for i in range(0, len(arr5)):
-    sim = vector_similarity(nlp.vocab[blue[4]].vector, nlp.vocab[arr5[i]].vector)
+    sim = vector_similarity(nlp.vocab[a5].vector, nlp.vocab[arr5[i]].vector)
     if sim < 0.45:
         arr_far.append(arr5[i])
     else:
         arr_near.append(arr5[i])
 
 arr_near = arr_near + arr5_1
-arr_near.remove(blue[4])
+arr_near.remove(a5)
 
-print(blue)
+print(a1, a2, a3, a4, a5)
+# blue = [a1, a2, a3, a4, a5]
+# print(blue)
+#----------------最简单的情况----------------------
+if transform == 1 :
+    b1, b2, b3, b4 = random.sample(arr_far, 4)
+    # print('最简单的情况:')
+    '''
+    for i in b1, b2, b3, b4:
+        print(i, end=' ')
+    print("   ")
+    '''
 
-for i in range(0, 4):
-    blue.append()
+#----------------最困难的情况----------------------
+if transform == 5 :
+    b1, b2, b3, b4 = random.sample(arr_near, 4)
+    # print('困难的情况:')
+    for i in b1, b2, b3, b4:
+        print(i, end=' ')
+    print("   ")
 
-red = []
+#----------------中等难度的情况----------------------
+if transform == 2 :
+    # print('中等难度情况1:')
+    b1 = random.choice(arr_near)
+
+    b2, b3, b4 = random.sample(arr_far, 3)
+
+
+if transform == 3 :
+    # print('中等难度情况2:')
+    b1, b2 = random.sample(arr_near, 2)
+
+    b3, b4 = random.sample(arr_far, 2)
+
+
+if transform == 4 :
+    # print('中等难度情况3:')
+    b1, b2, b3 = random.sample(arr_near, 3)
+
+    b4 = random.choice(arr_far)
+
+    #print("   ")
+    # print(transform)
+
+
+# red = [b1, b2, b3, b4, b5]
+# print(red)
+
 board = {
-    'blue': ['ambulance', 'hospital', 'spell', 'lock', 'charge', 'tail', 'link', 'cook', 'web'],
-    'red': ['cat', 'button', 'pipe', 'pants', 'mount', 'sleep', 'stick', 'file', 'worm'],
+    'blue': [a1, a2, a3, a4, a5],
+    'red': [b1, b2, b3, b4],
 }
 
-print(board['blue'][0])
+blue0 = []
+for k in board:
+    blue0.append((board[k]))
+
+board_ran = random.shuffle(blue0)
+print(board_ran)
+# print(board['blue'][0])
 
 point_b = 0
 point_r = 0
 
-while len(blue) != 0 and len(red) !=0 :
+while len(board['blue']) != 0 and len(board['red']) !=0 :
     # -------------blue---------------
     dict = corpora.Dictionary([board['blue']])
     print(dict)
@@ -192,9 +238,12 @@ while len(blue) != 0 and len(red) !=0 :
         restrict_vocab=50000
     )
 
+    # 设置clue 待优化
+    clue_b = clue[0]
+
     for i in range(0, 4):
         sum = 0
-        sim = vector_similarity(nlp.vocab[clue_b].vector, nlp.vocab[blue[i]].vector)
+        sim = vector_similarity(nlp.vocab[clue_b].vector, nlp.vocab[board['blue'[i]]].vector)
         if sim > 0.4:
             num += 1
 
@@ -208,16 +257,16 @@ while len(blue) != 0 and len(red) !=0 :
 
         ans = input()
 
-        if ans in blue:
+        if ans in board['blue']:
             print("回答正确")
             num += 1
             point_b += 1
-            blue.remove(ans)
+            board['blue'].remove(ans)
             if num == sum + 1:
                 break
         else:
             print("回答错误")
-            blue.remove(ans)
+            board['blue'].remove(ans)
             break
         # -------------red---------------
         # dict = corpora.Dictionary([board['blue']])
@@ -230,40 +279,42 @@ while len(blue) != 0 and len(red) !=0 :
             restrict_vocab=50000
         )
 
+        # 设置clue 待优化
+        clue_r = clue[0]
+
         for i in range(0, 4):
             sum = 0
-            sim = vector_similarity(nlp.vocab[clue_r].vector, nlp.vocab[blue[i]].vector)
+            sim = vector_similarity(nlp.vocab[clue_r].vector, nlp.vocab[board['red'[i]]].vector)
             if sim > 0.4:
-                num += 1
+                sum += 1
 
         print(clue_r, sum)
 
         num = 0
 
         while True:
-            print("words")
+            print(board_ran)
             print("输入答案")
 
             ans = input()
 
-            if ans in blue:
+            if ans in board['red']:
                 print("回答正确")
                 num += 1
                 point_b += 1
-                blue.remove(ans)
+                board['red'].remove(ans)
                 if num == sum + 1:
                     break
             else:
                 print("回答错误")
-                blue.remove(ans)
+                board['red'].remove(ans)
                 break
 
 if point_b > point_r :
     print("蓝方获胜")
-    
+
 elif point_r > point_b :
     print("红方获胜")
-    
+
 elif point_b == point_r :
     print("平局")
-
